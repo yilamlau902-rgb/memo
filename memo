@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>便條小達人</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft JhengHei", Arial, sans-serif;
+      background: linear-gradient(135deg, #dff6ff, #fff4ce);
+      color: #263238;
+    }
+
+    header {
+      text-align: center;
+      background: #2979ff;
+      color: white;
+      padding: 24px 15px;
+      box-shadow: 0 3px 8px #999;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .container {
+      max-width: 1050px;
+      margin: 25px auto;
+      padding: 0 15px;
+    }
+
+    .score-board {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 15px 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 8px #bbb;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .game-card {
+      background: white;
+      border-radius: 18px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 10px #bbb;
+    }
+
+    .game-card h2 {
+      color: #1565c0;
+      margin-top: 0;
+    }
+
+    .tip {
+      background: #fff8d6;
+      border-left: 6px solid #ffc107;
+      padding: 12px 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 11px 18px;
+      margin: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #2979ff;
+      color: white;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      background: #125dcc;
+    }
+
+    button.secondary {
+      background: #78909c;
+    }
+
+    button.success {
+      background: #2e9d59;
+    }
+
+    button.danger {
+      background: #e53935;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .format-card {
+      background: #e3f2fd;
+      border: 3px solid #90caf9;
+      border-radius: 12px;
+      padding: 15px;
+      min-width: 130px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .format-card:hover {
+      background: #bbdefb;
+    }
+
+    .format-card.selected {
+      background: #81d4fa;
+      border-color: #0277bd;
+    }
+
+    .answer-list {
+      min-height: 70px;
+      border: 3px dashed #aaa;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 15px;
+      background: #fafafa;
+    }
+
+    .answer-item {
+      display: inline-block;
+      background: #fff59d;
+      border-radius: 8px;
+      padding: 10px 15px;
+      margin: 5px;
+      font-weight: bold;
+    }
+
+    .wrong-note {
+      background: #fff;
+      border: 2px solid #ef5350;
+      border-radius: 10px;
+      padding: 20px;
+      font-size: 18px;
+      line-height: 2;
+      margin: 15px 0;
+    }
+
+    .error-option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: #fce4ec;
+      color: #880e4f;
+      border: 2px solid #f48fb1;
+      margin: 10px 0;
+    }
+
+    .error-option:hover {
+      background: #f8bbd0;
+    }
+
+    .form-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: 2px solid #b0bec5;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .feedback {
+      margin-top: 15px;
+      padding: 13px;
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    .feedback.good {
+      color: #1b5e20;
+      background: #dcedc8;
+    }
+
+    .feedback.bad {
+      color: #b71c1c;
+      background: #ffcdd2;
+    }
+
+    .note-preview {
+      background: #fffde7;
+      border: 2px solid #fbc02d;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 10px;
+      line-height: 1.8;
+      white-space: pre-line;
+    }
+
+    @media (max-width: 650px) {
+      .form-area {
+        grid-template-columns: 1fr;
+      }
+
+      .full {
+        grid-column: auto;
+      }
+
+      .score-board {
+        display: block;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>📝 便條小達人</h1>
+    <p>一起學習便條的格式和寫法！</p>
+  </header>
+
+  <main class="container">
+
+    <div class="score-board">
+      <span>目前關卡：<span id="levelNumber">1</span> / 3</span>
+      <span>⭐ 分數：<span id="score">0</span></span>
+    </div>
+
+    <!-- 第一關 -->
+    <section id="level1" class="game-card">
+      <h2>第一關：格式拼拼樂</h2>
+
+      <div class="tip">
+        便條通常包括四個部分：<b>稱呼、正文、署名、日期</b>。
+        請按正確次序選擇卡片。
+      </div>
+
+      <p>請依次按下正確的便條格式：</p>
+
+      <div id="formatCards" class="cards"></div>
+
+      <h3>你的答案：</h3>
+      <div id="answerList" class="answer-list">
+        尚未選擇任何項目
+      </div>
+
+      <button onclick="checkLevel1()">提交答案</button>
+      <button class="secondary" onclick="resetLevel1()">重新開始</button>
+
+      <div id="feedback1"></div>
+    </section>
+
+    <!-- 第二關 -->
+    <section id="level2" class="game-card hidden">
+      <h2>第二關：找出格式錯誤</h2>
+
+      <div class="tip">
+        仔細閱讀以下便條，找出格式或內容上的問題。
+      </div>
+
+      <div class="wrong-note">
+        2026年10月28日<br><br>
+        小華<br>
+        小明，請你明天帶中文課本回校。<br>
+        小明：
+      </div>
+
+      <p>這張便條有甚麼問題？請選出正確答案：</p>
+
+      <button class="error-option" onclick="answerError(1)">
+        A. 日期放在開首，而且沒有寫正文
+      </button>
+
+      <button class="error-option" onclick="answerError(2)">
+        B. 稱呼和署名的位置倒轉了，日期也應放在最後
+      </button>
+
+      <button class="error-option" onclick="answerError(3)">
+        C. 正文太短，所以不能成為便條
+      </button>
+
+      <div id="feedback2"></div>
+    </section>
+
+    <!-- 第三關 -->
+    <section id="level3" class="game-card hidden">
+      <h2>第三關：寫一張完整便條</h2>
+
+      <div class="tip">
+        情境：你明天要到圖書館完成中文專題，請留言告訴媽媽。
+        便條要包括稱呼、正文、署名和日期。
+      </div>
+
+      <div class="form-area">
+        <div>
+          <label for="salutation">稱呼：</label>
+          <input id="salutation" placeholder="例如：媽媽：">
+        </div>
+
+        <div>
+          <label for="signature">署名：</label>
+          <input id="signature" placeholder="例如：小文">
+        </div>
+
+        <div class="full">
+          <label for="content">正文：</label>
+          <textarea id="content" placeholder="請清楚交代事情、時間和地點。"></textarea>
+        </div>
+
+        <div>
+          <label for="date">日期：</label>
+          <input id="date" type="date">
+        </div>
+      </div>
+
+      <button class="success" onclick="checkLevel3()">提交便條</button>
+      <button class="secondary" onclick="showPreview()">預覽便條</button>
+
+      <div id="feedback3"></div>
+      <div id="preview" class="note-preview hidden"></div>
+    </section>
+
+    <!-- 完成畫面 -->
+    <section id="finish" class="game-card hidden">
+      <h2>🎉 恭喜你完成遊戲！</h2>
+      <p id="finalMessage"></p>
+      <button onclick="location.reload()">再玩一次</button>
+    </section>
+
+  </main>
+
+  <script>
+    let score = 0;
+    let selectedItems = [];
+
+    const correctOrder = ["稱呼", "正文", "署名", "日期"];
+
+    const formatCards = document.getElementById("formatCards");
+
+    function createFormatCards() {
+      const shuffled = ["正文", "日期", "稱呼", "署名"];
+
+      shuffled.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "format-card";
+        card.textContent = item;
+        card.onclick = () => selectFormat(card, item);
+        formatCards.appendChild(card);
+      });
+    }
+
+    function selectFormat(card, item) {
+      if (selectedItems.includes(item)) return;
+
+      selectedItems.push(item);
+      card.classList.add("selected");
+
+      const answerList = document.getElementById("answerList");
+
+      if (selectedItems.length === 1) {
+        answerList.innerHTML = "";
+      }
+
+      const answer = document.createElement("span");
+      answer.className = "answer-item";
+      answer.textContent = selectedItems.length + ". " + item;
+      answerList.appendChild(answer);
+    }
+
+    function checkLevel1() {
+      const feedback = document.getElementById("feedback1");
+
+      if (selectedItems.length !== correctOrder.length) {
+        showFeedback(
+          feedback,
+          "請先選擇全部四個部分。",
+          false
+        );
+        return;
+      }
+
+      const isCorrect = selectedItems.every(
+        (item, index) => item === correctOrder[index]
+      );
+
+      if (isCorrect) {
+        score += 10;
+        updateScore();
+
+        showFeedback(
+          feedback,
+          "答對了！便條通常先寫稱呼，再寫正文，最後寫署名和日期。",
+          true
+        );
+
+        setTimeout(() => {
+          document.getElementById("level1").classList.add("hidden");
+          document.getElementById("level2").classList.remove("hidden");
+          document.getElementById("levelNumber").textContent = "2";
+        }, 1200);
+      } else {
+        showFeedback(
+          feedback,
+          "次序不正確，再想一想：稱呼通常放在最前面。",
+          false
+        );
+      }
+    }
+
+    function resetLevel1() {
+      selectedItems = [];
+      formatCards.innerHTML = "";
+      document.getElementById("answerList").innerHTML = "尚未選擇任何項目";
+      document.getElementById("feedback1").innerHTML = "";
+      createFormatCards();
+    }
+
+    function answerError(answer) {
+      const feedback = document.getElementById("feedback2");
+
+      if (answer === 2) {
+        score += 10;
+        updateScore();
+
+        showFeedback(
+          feedback,
+          "答對了！稱呼應放在開首，署名和日期通常放在便條最後。",
+          true
+        );
+
+        setTimeout(() => {
+          document.getElementById("level2").classList.add("hidden");
+          document.getElementById("level3").classList.remove("hidden");
+          document.getElementById("levelNumber").textContent = "3";
+        }, 1200);
+      } else {
+        showFeedback(
+          feedback,
+          "再想一想：便條最重要的是格式部分的位置。",
+          false
+        );
+      }
+    }
+
+    function checkLevel3() {
+      const salutation = document.getElementById("salutation").value.trim();
+      const content = document.getElementById("content").value.trim();
+      const signature = document.getElementById("signature").value.trim();
+      const date = document.getElementById("date").value;
+      const feedback = document.getElementById("feedback3");
+
+      if (!salutation || !content || !signature || !date) {
+        showFeedback(
+          feedback,
+          "請填寫完整的稱呼、正文、署名和日期。",
+          false
+        );
+        return;
+      }
+
+      const hasPlace = content.includes("圖書館");
+      const hasTime = content.includes("明天") || content.includes("時間");
+
+      if (!hasPlace || !hasTime) {
+        showFeedback(
+          feedback,
+          "正文還可以更完整，記得交代時間和地點，例如「明天到圖書館」。",
+          false
+        );
+        return;
+      }
+
+      score += 20;
+      updateScore();
+
+      showFeedback(
+        feedback,
+        "寫得很好！你的便條格式完整，內容也很清楚。",
+        true
+      );
+
+      setTimeout(() => {
+        document.getElementById("level3").classList.add("hidden");
+        document.getElementById("finish").classList.remove("hidden");
+        document.getElementById("finalMessage").textContent =
+          `你的總分是 ${score} 分！你已經成為便條小達人！`;
+      }, 1200);
+    }
+
+    function showPreview() {
+      const salutation = document.getElementById("salutation").value;
+      const content = document.getElementById("content").value;
+      const signature = document.getElementById("signature").value;
+      const dateValue = document.getElementById("date").value;
+
+      let dateText = dateValue || "未填寫日期";
+
+      if (dateValue) {
+        const date = new Date(dateValue);
+        dateText = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+      }
+
+      const preview = document.getElementById("preview");
+      preview.textContent =
+`${salutation}
+
+${content}
+
+${signature}
+${dateText}`;
+
+      preview.classList.remove("hidden");
+    }
+
+    function showFeedback(element, message, good) {
+      element.textContent = message;
+      element.className = "feedback " + (good ? "good" : "bad");
+    }
+
+    function updateScore() {
+      document.getElementById("score").textContent = score;
+    }
+
+    // 預設填入今天日期
+    document.getElementById("date").valueAsDate = new Date();
+
+    createFormatCards();
+  </script>
+
+</body>
+</html>
